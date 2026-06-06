@@ -77,6 +77,22 @@ export default function ChatPage() {
                 )
             );
 
+        const registerSocketUser = () => {
+            if (
+                currentUser?.id
+            ) {
+                socket.emit(
+                    "user_connected",
+                    currentUser.id
+                );
+
+                console.log(
+                    "User Registered:",
+                    currentUser.id
+                );
+            }
+        };
+
         console.log(
             "Current User:",
             currentUser
@@ -84,36 +100,18 @@ export default function ChatPage() {
 
         socket.on(
             "connect",
-            () => {
-
-                console.log(
-                    "Socket Connected:",
-                    socket.id
-                );
-
-                if (
-                    currentUser?.id
-                ) {
-
-                    socket.emit(
-                        "user_connected",
-                        currentUser.id
-                    );
-
-                    console.log(
-                        "User Registered:",
-                        currentUser.id
-                    );
-                }
-            }
+            registerSocketUser
         );
 
+        if (socket.connected) {
+            registerSocketUser();
+        }
+
         return () => {
-
             socket.off(
-                "connect"
+                "connect",
+                registerSocketUser
             );
-
         };
 
     }, []);
