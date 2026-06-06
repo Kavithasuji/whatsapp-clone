@@ -1,16 +1,20 @@
 import { io } from "socket.io-client";
 
+const SOCKET_URL =
+  import.meta.env
+    .VITE_SOCKET_URL;
+
 const createSocket = () =>
-  io("http://localhost:5000", {
+  io(SOCKET_URL, {
     withCredentials: true,
     transports: ["websocket"],
-    // keep default reconnection behavior; HMR can create duplicates
   });
 
-// Persist socket instance across Vite HMR reloads to avoid multiple connections
 const socket =
   typeof window !== "undefined"
-    ? window.__whatsapp_socket || (window.__whatsapp_socket = createSocket())
+    ? window.__whatsapp_socket ||
+      (window.__whatsapp_socket =
+        createSocket())
     : createSocket();
 
 export default socket;

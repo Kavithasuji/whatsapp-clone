@@ -22,8 +22,9 @@ import {
     sendMessage,
     markDelivered,
     markRead,
+    getMessages,
 }
-    from "../services/messageService";
+from "../services/messageService";
 
 export default function ChatPage() {
 
@@ -45,6 +46,15 @@ export default function ChatPage() {
 
     const [messages, setMessages] =
         useState([]);
+
+        const [page, setPage] =
+    useState(1);
+
+const [hasMore, setHasMore] =
+    useState(true);
+
+const [loadingMore, setLoadingMore] =
+    useState(false);
 
     const sortUsersByRecentConversation =
         (users) => {
@@ -545,9 +555,15 @@ export default function ChatPage() {
                     response.conversation
                 );
 
-                setMessages(
-                    response.messages || []
-                );
+             setPage(1);
+
+setMessages(
+    response.messages || []
+);
+
+setHasMore(
+    response.hasMore ?? false
+);
 
                 if (
                     response.conversation?._id
@@ -586,6 +602,57 @@ export default function ChatPage() {
     // ----------------------------------
     // Select User
     // ----------------------------------
+
+    const loadOlderMessages =
+  async () => {
+
+    if (
+      !conversation?._id ||
+      !hasMore ||
+      loadingMore
+    ) {
+      return;
+    }
+
+    try {
+
+      setLoadingMore(true);
+
+      const nextPage =
+        page + 1;
+
+      const response =
+        await getMessages(
+          conversation._id,
+                    nextPage,
+                    1
+        );
+
+      setMessages(
+        (prev) => [
+          ...response.messages,
+          ...prev,
+        ]
+      );
+
+      setPage(nextPage);
+
+      setHasMore(
+        response.hasMore
+      );
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setLoadingMore(
+        false
+      );
+
+    }
+  };
 
     const handleSelectUser =
         (user) => {
@@ -692,12 +759,14 @@ export default function ChatPage() {
                     }
                 />
 
-                <MessageList
-                    conversation={
-                        conversation
-                    }
-                    messages={messages}
-                />
+               <MessageList
+  conversation={conversation}
+  messages={messages}
+  hasMore={hasMore}
+  loadOlderMessages={
+    loadOlderMessages
+  }
+/>
 
                 <MessageInput
                     onSendMessage={
