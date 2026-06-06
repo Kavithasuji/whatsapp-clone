@@ -77,18 +77,20 @@ export default function ChatPage() {
                 )
             );
 
+        const currentUserId =
+            currentUser?.id ||
+            currentUser?._id;
+
         const registerSocketUser = () => {
-            if (
-                currentUser?.id
-            ) {
+            if (currentUserId) {
                 socket.emit(
                     "user_connected",
-                    currentUser.id
+                    currentUserId
                 );
 
                 console.log(
                     "User Registered:",
-                    currentUser.id
+                    currentUserId
                 );
             }
         };
@@ -135,6 +137,30 @@ export default function ChatPage() {
     // Socket Listener
     // ----------------------------------
 
+    // Debug: log socket lifecycle events to diagnose frequent reconnections
+    useEffect(() => {
+        const onConnect = () =>
+            console.log("[socket] connect", new Date().toISOString(), socket.id);
+        const onDisconnect = (reason) =>
+            console.log("[socket] disconnect", new Date().toISOString(), reason);
+        const onConnectError = (err) =>
+            console.log("[socket] connect_error", new Date().toISOString(), err);
+        const onReconnectAttempt = (attempt) =>
+            console.log("[socket] reconnect_attempt", new Date().toISOString(), attempt);
+
+        socket.on("connect", onConnect);
+        socket.on("disconnect", onDisconnect);
+        socket.on("connect_error", onConnectError);
+        socket.on("reconnect_attempt", onReconnectAttempt);
+
+        return () => {
+            socket.off("connect", onConnect);
+            socket.off("disconnect", onDisconnect);
+            socket.off("connect_error", onConnectError);
+            socket.off("reconnect_attempt", onReconnectAttempt);
+        };
+    }, []);
+
     useEffect(() => {
 
         const handleNewMessage =
@@ -168,6 +194,12 @@ export default function ChatPage() {
                     );
 
                     try {
+                        console.log(
+                            "[markDelivered] calling for conversation:",
+                            message.conversationId,
+                            new Date().toISOString()
+                        );
+
                         await markDelivered(
                             message.conversationId
                         );
@@ -476,19 +508,27 @@ export default function ChatPage() {
             return sortUsersByRecentConversation(updatedUsers);
         });
 
-        setSelectedUser((prev) =>
-            prev && String(prev._id) === String(userId)
-                ? {
-                      ...prev,
-                      lastMessage,
-                      lastMessageAt,
-                      unreadCount:
-                          unreadCount !== null
-                              ? unreadCount
-                              : prev.unreadCount,
-                  }
-                : prev
-        );
+        setSelectedUser((prev) => {
+            if (!prev || String(prev._id) !== String(userId)) return prev;
+
+            const nextUnreadCount =
+                unreadCount !== null ? unreadCount : prev.unreadCount;
+
+            const lastMessageUnchanged = prev.lastMessage === lastMessage;
+            const lastMessageAtUnchanged = String(prev.lastMessageAt) === String(lastMessageAt);
+            const unreadUnchanged = (prev.unreadCount || 0) === (nextUnreadCount || 0);
+
+            if (lastMessageUnchanged && lastMessageAtUnchanged && unreadUnchanged) {
+                return prev;
+            }
+
+            return {
+                ...prev,
+                lastMessage,
+                lastMessageAt,
+                unreadCount: nextUnreadCount,
+            };
+        });
     };
 
     const loadConversation =
@@ -512,6 +552,12 @@ export default function ChatPage() {
                 if (
                     response.conversation?._id
                 ) {
+
+                    console.log(
+                        "[markDelivered] loadConversation calling for:",
+                        response.conversation._id,
+                        new Date().toISOString()
+                    );
 
                     await markDelivered(
                         response.conversation._id

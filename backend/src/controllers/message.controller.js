@@ -393,37 +393,34 @@ export const sendMessage = async (
 
     await conversation.save();
 
-    const receiverSocketId =
-      onlineUsers.get(
-        String(receiverId)
-      );
+    const receiverSocketIds =
+      onlineUsers.get(String(receiverId));
 
-    if (receiverSocketId) {
+    if (receiverSocketIds?.size) {
       // mark message as delivered since recipient is online (device reached)
       message.status = "delivered";
       await message.save();
 
       // notify recipient about the new message
-      getIO()
-        .to(receiverSocketId)
-        .emit(
-          "new_message",
-          message
-        );
+      for (const socketId of receiverSocketIds) {
+        getIO()
+          .to(socketId)
+          .emit("new_message", message);
+      }
 
       // notify sender that the message was delivered
-      const senderSocketId =
-        onlineUsers.get(
-          String(senderId)
-        );
+      const senderSocketIds =
+        onlineUsers.get(String(senderId));
 
-      if (senderSocketId) {
-        getIO()
-          .to(senderSocketId)
-          .emit(
-            "message_delivered",
-            { messageId: message._id }
-          );
+      if (senderSocketIds?.size) {
+        for (const socketId of senderSocketIds) {
+          getIO()
+            .to(socketId)
+            .emit(
+              "message_delivered",
+              { messageId: message._id }
+            );
+        }
       }
 
       console.log(
@@ -519,34 +516,22 @@ export const markDelivered =
         }
       );
 
-      messages.forEach(
-        (message) => {
+      messages.forEach((message) => {
+        const senderSocketIds =
+          onlineUsers.get(
+            String(message.senderId)
+          );
 
-          const senderSocketId =
-            onlineUsers.get(
-              String(
-                message.senderId
-              )
-            );
-
-          if (
-            senderSocketId
-          ) {
-
+        if (senderSocketIds?.size) {
+          for (const socketId of senderSocketIds) {
             getIO()
-              .to(
-                senderSocketId
-              )
-              .emit(
-                "message_delivered",
-                {
-                  messageId:
-                    message._id,
-                }
-              );
+              .to(socketId)
+              .emit("message_delivered", {
+                messageId: message._id,
+              });
           }
         }
-      );
+      });
 
       return res.status(200).json({
         success: true,
@@ -600,34 +585,22 @@ export const markRead =
         }
       );
 
-      messages.forEach(
-        (message) => {
+      messages.forEach((message) => {
+        const senderSocketIds =
+          onlineUsers.get(
+            String(message.senderId)
+          );
 
-          const senderSocketId =
-            onlineUsers.get(
-              String(
-                message.senderId
-              )
-            );
-
-          if (
-            senderSocketId
-          ) {
-
+        if (senderSocketIds?.size) {
+          for (const socketId of senderSocketIds) {
             getIO()
-              .to(
-                senderSocketId
-              )
-              .emit(
-                "message_read",
-                {
-                  messageId:
-                    message._id,
-                }
-              );
+              .to(socketId)
+              .emit("message_read", {
+                messageId: message._id,
+              });
           }
         }
-      );
+      });
 
       return res.status(200).json({
         success: true,

@@ -1,75 +1,7 @@
 
-// import MessageBubble from "./MessageBubble";
-// import {
-//   useEffect,
-//   useRef,
-// } from "react";
-
-// export default function MessageList({
-//   conversation,
-//   messages = [],
-// }) {
-//   if (!conversation) {
-//     return (
-//       <div
-//         className="
-//           flex-1
-//           flex
-//           items-center
-//           justify-center
-//           bg-[#efeae2]
-//           text-gray-500
-//         "
-//       >
-//         Start a conversation
-//       </div>
-//     );
-//   }
-// const bottomRef =
-//   useRef(null);
-
-// useEffect(() => {
-
-//   bottomRef.current?.
-//     scrollIntoView({
-//       behavior: "smooth",
-//     });
-
-// }, [messages]);
-//   return (
-//     <div
-//       className="
-//         flex-1
-//         p-4
-//         bg-[#efeae2]
-//         overflow-y-auto
-//       "
-//     >
-//       {!messages.length ? (
-//         <div
-//           className="
-//             h-full
-//             flex
-//             items-center
-//             justify-center
-//             text-gray-500
-//           "
-//         >
-//           No messages yet
-//         </div>
-//       ) : (
-//         messages.map((message) => (
-//           <MessageBubble
-//             key={message._id}
-//             message={message}
-//           />
-//         ))
-//       )}
-//     </div>
-//   );
-// }
 import { useEffect, useRef } from "react";
 import MessageBubble from "./MessageBubble";
+
 
 export default function MessageList({
   conversation,

@@ -4,6 +4,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 
+import defaultAvatar from "../../assets/default-avatar.png.jpg";
 export default function ChatHeader({
   selectedUser,
 }) {
@@ -26,17 +27,19 @@ export default function ChatHeader({
       {/* Left Section */}
       <div className="flex items-center">
 
-        <img
-          src="https://i.pravatar.cc/150?img=12"
-          alt="user"
-          className="
-            w-10
-            h-10
-            rounded-full
-            object-cover
-          "
-        />
-
+    <img
+  src={
+    selectedUser?.profilePicture ||
+    defaultAvatar
+  }
+  alt="user"
+  className="
+    w-10
+    h-10
+    rounded-full
+    object-cover
+  "
+/>
         <div className="ml-3">
 
           <h3
