@@ -106,3 +106,33 @@ export const getUsers = async (
 
   }
 };
+export const updateProfile =
+  async (req, res) => {
+
+    try {
+
+      const user =
+        await User.findByIdAndUpdate(
+          req.user.id,
+          {
+            profilePicture:
+              req.body.profilePicture,
+          },
+          {
+            new: true,
+          }
+        );
+
+      return res.json({
+        success: true,
+        user,
+      });
+
+    } catch (error) {
+
+      return res.status(500).json({
+        success: false,
+      });
+
+    }
+};

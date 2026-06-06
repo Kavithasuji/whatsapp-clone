@@ -41,21 +41,38 @@ export const getConversation = async (
       });
     }
 
-    const messages =
-      await Message.find({
-        conversationId:
-          conversation._id,
-      })
-        .sort({
-          createdAt: 1,
-        })
-        .lean();
+   const limit =
+  Number(req.query.limit) || 20;
 
-    return res.status(200).json({
-      success: true,
-      conversation,
-      messages,
-    });
+const total =
+  await Message.countDocuments({
+    conversationId:
+      conversation._id,
+  });
+
+const msgs =
+  await Message.find({
+    conversationId:
+      conversation._id,
+  })
+    .sort({
+      createdAt: -1,
+    })
+    .limit(limit)
+    .lean();
+
+const messages =
+  msgs.reverse();
+
+const hasMore =
+  total > limit;
+
+return res.status(200).json({
+  success: true,
+  conversation,
+  messages,
+  hasMore,
+});
   } catch (error) {
     console.error(
       "Get Conversation Error:",

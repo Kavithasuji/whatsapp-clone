@@ -12,10 +12,10 @@ export const getConversations =
 };
 
 export const getConversation =
-  async (receiverId) => {
+  async (receiverId, limit = 20) => {
     const response =
       await api.get(
-        `/conversations/${receiverId}`
+        `/conversations/${receiverId}?limit=${limit}`
       );
 
     return response.data;

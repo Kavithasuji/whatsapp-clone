@@ -22,8 +22,9 @@ import {
     sendMessage,
     markDelivered,
     markRead,
+    getMessages,
 }
-    from "../services/messageService";
+from "../services/messageService";
 
 export default function ChatPage() {
 
@@ -45,6 +46,15 @@ export default function ChatPage() {
 
     const [messages, setMessages] =
         useState([]);
+
+        const [page, setPage] =
+    useState(1);
+
+const [hasMore, setHasMore] =
+    useState(true);
+
+const [loadingMore, setLoadingMore] =
+    useState(false);
 
     const sortUsersByRecentConversation =
         (users) => {
@@ -77,6 +87,24 @@ export default function ChatPage() {
                 )
             );
 
+        const currentUserId =
+            currentUser?.id ||
+            currentUser?._id;
+
+        const registerSocketUser = () => {
+            if (currentUserId) {
+                socket.emit(
+                    "user_connected",
+                    currentUserId
+                );
+
+                console.log(
+                    "User Registered:",
+                    currentUserId
+                );
+            }
+        };
+
         console.log(
             "Current User:",
             currentUser
@@ -84,36 +112,18 @@ export default function ChatPage() {
 
         socket.on(
             "connect",
-            () => {
-
-                console.log(
-                    "Socket Connected:",
-                    socket.id
-                );
-
-                if (
-                    currentUser?.id
-                ) {
-
-                    socket.emit(
-                        "user_connected",
-                        currentUser.id
-                    );
-
-                    console.log(
-                        "User Registered:",
-                        currentUser.id
-                    );
-                }
-            }
+            registerSocketUser
         );
 
+        if (socket.connected) {
+            registerSocketUser();
+        }
+
         return () => {
-
             socket.off(
-                "connect"
+                "connect",
+                registerSocketUser
             );
-
         };
 
     }, []);
@@ -136,6 +146,30 @@ export default function ChatPage() {
     // ----------------------------------
     // Socket Listener
     // ----------------------------------
+
+    // Debug: log socket lifecycle events to diagnose frequent reconnections
+    useEffect(() => {
+        const onConnect = () =>
+            console.log("[socket] connect", new Date().toISOString(), socket.id);
+        const onDisconnect = (reason) =>
+            console.log("[socket] disconnect", new Date().toISOString(), reason);
+        const onConnectError = (err) =>
+            console.log("[socket] connect_error", new Date().toISOString(), err);
+        const onReconnectAttempt = (attempt) =>
+            console.log("[socket] reconnect_attempt", new Date().toISOString(), attempt);
+
+        socket.on("connect", onConnect);
+        socket.on("disconnect", onDisconnect);
+        socket.on("connect_error", onConnectError);
+        socket.on("reconnect_attempt", onReconnectAttempt);
+
+        return () => {
+            socket.off("connect", onConnect);
+            socket.off("disconnect", onDisconnect);
+            socket.off("connect_error", onConnectError);
+            socket.off("reconnect_attempt", onReconnectAttempt);
+        };
+    }, []);
 
     useEffect(() => {
 
@@ -170,6 +204,12 @@ export default function ChatPage() {
                     );
 
                     try {
+                        console.log(
+                            "[markDelivered] calling for conversation:",
+                            message.conversationId,
+                            new Date().toISOString()
+                        );
+
                         await markDelivered(
                             message.conversationId
                         );
@@ -478,19 +518,27 @@ export default function ChatPage() {
             return sortUsersByRecentConversation(updatedUsers);
         });
 
-        setSelectedUser((prev) =>
-            prev && String(prev._id) === String(userId)
-                ? {
-                      ...prev,
-                      lastMessage,
-                      lastMessageAt,
-                      unreadCount:
-                          unreadCount !== null
-                              ? unreadCount
-                              : prev.unreadCount,
-                  }
-                : prev
-        );
+        setSelectedUser((prev) => {
+            if (!prev || String(prev._id) !== String(userId)) return prev;
+
+            const nextUnreadCount =
+                unreadCount !== null ? unreadCount : prev.unreadCount;
+
+            const lastMessageUnchanged = prev.lastMessage === lastMessage;
+            const lastMessageAtUnchanged = String(prev.lastMessageAt) === String(lastMessageAt);
+            const unreadUnchanged = (prev.unreadCount || 0) === (nextUnreadCount || 0);
+
+            if (lastMessageUnchanged && lastMessageAtUnchanged && unreadUnchanged) {
+                return prev;
+            }
+
+            return {
+                ...prev,
+                lastMessage,
+                lastMessageAt,
+                unreadCount: nextUnreadCount,
+            };
+        });
     };
 
     const loadConversation =
@@ -507,13 +555,25 @@ export default function ChatPage() {
                     response.conversation
                 );
 
-                setMessages(
-                    response.messages || []
-                );
+             setPage(1);
+
+setMessages(
+    response.messages || []
+);
+
+setHasMore(
+    response.hasMore ?? false
+);
 
                 if (
                     response.conversation?._id
                 ) {
+
+                    console.log(
+                        "[markDelivered] loadConversation calling for:",
+                        response.conversation._id,
+                        new Date().toISOString()
+                    );
 
                     await markDelivered(
                         response.conversation._id
@@ -542,6 +602,57 @@ export default function ChatPage() {
     // ----------------------------------
     // Select User
     // ----------------------------------
+
+    const loadOlderMessages =
+  async () => {
+
+    if (
+      !conversation?._id ||
+      !hasMore ||
+      loadingMore
+    ) {
+      return;
+    }
+
+    try {
+
+      setLoadingMore(true);
+
+      const nextPage =
+        page + 1;
+
+      const response =
+        await getMessages(
+          conversation._id,
+                    nextPage,
+                    1
+        );
+
+      setMessages(
+        (prev) => [
+          ...response.messages,
+          ...prev,
+        ]
+      );
+
+      setPage(nextPage);
+
+      setHasMore(
+        response.hasMore
+      );
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setLoadingMore(
+        false
+      );
+
+    }
+  };
 
     const handleSelectUser =
         (user) => {
@@ -648,12 +759,14 @@ export default function ChatPage() {
                     }
                 />
 
-                <MessageList
-                    conversation={
-                        conversation
-                    }
-                    messages={messages}
-                />
+               <MessageList
+  conversation={conversation}
+  messages={messages}
+  hasMore={hasMore}
+  loadOlderMessages={
+    loadOlderMessages
+  }
+/>
 
                 <MessageInput
                     onSendMessage={

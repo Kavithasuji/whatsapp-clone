@@ -7,108 +7,79 @@ import { Server } from "socket.io";
 
 let io;
 
-const onlineUsers =
-    new Map();
+const onlineUsers = new Map();
 
-export const initSocket =
-    (server) => {
+export const initSocket = (server) => {
+    io = new Server(server, {
+        cors: {
+            origin: "*",
+            methods: ["GET", "POST"],
+            credentials: true,
+        },
+    });
 
-        io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: [
-      "GET",
-      "POST",
-    ],
-    credentials: true,
-  },
-});
+    io.on("connection", (socket) => {
+        console.log("Socket Connected:", socket.id);
 
-        io.on(
-            "connection",
-            (socket) => {
+        socket.on("user_connected", (userId) => {
+            const normalizedUserId = String(userId);
 
-                console.log(
-                    "Socket Connected:",
-                    socket.id
+            console.log(
+                "User Online:",
+                normalizedUserId,
+                "Socket:",
+                socket.id
+            );
+
+            const existingSockets =
+                onlineUsers.get(normalizedUserId);
+
+            if (existingSockets) {
+                existingSockets.add(socket.id);
+            } else {
+                onlineUsers.set(
+                    normalizedUserId,
+                    new Set([socket.id])
                 );
-
-                socket.on(
-                    "user_connected",
-                    (userId) => {
-
-                        console.log(
-                            "User Online:",
-                            userId,
-                            "Socket:",
-                            socket.id
-                        );
-
-                        onlineUsers.set(
-                            userId,
-                            socket.id
-                        );
-
-                        io.emit(
-                            "user_online",
-                            {
-                                userId,
-                            }
-                        );
-                    }
-                );
-
-                socket.on(
-                    "disconnect",
-                    () => {
-
-                        let removedUserId = null;
-
-                        for (const [
-                            userId,
-                            socketId,
-                        ] of onlineUsers.entries()) {
-
-                            if (
-                                socketId ===
-                                socket.id
-                            ) {
-
-                                onlineUsers.delete(
-                                    userId
-                                );
-                                removedUserId = userId;
-
-                                console.log(
-                                    "User Offline:",
-                                    userId
-                                );
-
-                                break;
-                            }
-                        }
-
-                        if (removedUserId) {
-                            io.emit(
-                                "user_offline",
-                                {
-                                    userId:
-                                        removedUserId,
-                                }
-                            );
-                        }
-
-                        console.log(
-                            "Socket Disconnected:",
-                            socket.id
-                        );
-                    }
-                );
+                io.emit("user_online", {
+                    userId: normalizedUserId,
+                });
             }
-        );
+        });
 
-        return io;
-    };
+        socket.on("disconnect", () => {
+            let removedUserId = null;
+
+            for (const [userId, socketIds] of onlineUsers.entries()) {
+                if (socketIds.has(socket.id)) {
+                    socketIds.delete(socket.id);
+
+                    if (socketIds.size === 0) {
+                        onlineUsers.delete(userId);
+                        removedUserId = userId;
+
+                        console.log(
+                            "User Offline:",
+                            userId
+                        );
+                    }
+
+                    break;
+                }
+            }
+
+            if (removedUserId) {
+                io.emit("user_offline", {
+                    userId: removedUserId,
+                });
+            }
+
+            console.log("Socket Disconnected:", socket.id);
+        });
+    });
+
+    return io;
+};
 
 export const getIO =
     () => io;

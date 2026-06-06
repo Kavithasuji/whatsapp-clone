@@ -8,3 +8,20 @@ export const getUsers =
 
     return response.data;
 };
+
+
+export const updateProfile =
+  async (
+    profilePicture
+  ) => {
+
+    const response =
+      await api.put(
+        "/users/profile",
+        {
+          profilePicture,
+        }
+      );
+
+    return response.data;
+};

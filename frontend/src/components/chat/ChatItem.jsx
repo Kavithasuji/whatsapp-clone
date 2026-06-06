@@ -1,5 +1,5 @@
 
-
+import defaultAvatar from "../../assets/default-avatar.png.jpg";
 export default function ChatItem({
   chat,
   active = false,
@@ -29,19 +29,19 @@ export default function ChatItem({
       {/* Avatar */}
       <div className="relative flex-shrink-0">
 
-        <img
-          src={
-            chat.avatar ||
-            "https://i.pravatar.cc/150?img=12"
-          }
-          alt={chat.name}
-          className="
-            w-12
-            h-12
-            rounded-full
-            object-cover
-          "
-        />
+       <img
+  src={
+    chat.profilePicture ||
+    defaultAvatar
+  }
+  alt={chat.name}
+  className="
+    w-12
+    h-12
+    rounded-full
+    object-cover
+  "
+/>
 
         {chat.online ? (
           <span
