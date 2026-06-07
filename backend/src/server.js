@@ -35,7 +35,8 @@ app.use(
   cors({
     origin: [
       "https://whatsapp-clone-lovat.vercel.app",
-      "https://whatsapp-clone-2uo6120ey-kavitha-s-projects2.vercel.app",
+      "https://whatsapp-clone-git-main-kavitha-s-projects2.vercel.app",
+      "https://whatsapp-clone-4w0jrsyem-kavitha-s-projects2.vercel.app",
       "http://localhost:5173",
     ],
     credentials: true,
