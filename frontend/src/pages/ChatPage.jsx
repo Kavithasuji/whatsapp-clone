@@ -95,17 +95,8 @@ export default function ChatPage() {
                     currentUserId
                 );
 
-                // console.log(
-                //     "User Registered:",
-                //     currentUserId
-                // );
             }
         };
-
-        // console.log(
-        //     "Current User:",
-        //     currentUser
-        // );
 
         socket.on(
             "connect",
@@ -201,11 +192,6 @@ export default function ChatPage() {
                     );
 
                     try {
-                        // console.log(
-                        //     "[markDelivered] calling for conversation:",
-                        //     message.conversationId,
-                        //     new Date().toISOString()
-                        // );
 
                         await markDelivered(
                             message.conversationId
@@ -566,12 +552,6 @@ export default function ChatPage() {
                     response.conversation?._id
                 ) {
 
-                    // console.log(
-                    //     "[markDelivered] loadConversation calling for:",
-                    //     response.conversation._id,
-                    //     new Date().toISOString()
-                    // );
-
                     await markDelivered(
                         response.conversation._id
                     );
@@ -670,52 +650,35 @@ export default function ChatPage() {
     // ----------------------------------
     // Send Message
     // ----------------------------------
+    const [sentTrigger, setSentTrigger] = useState(0);
 
-    const handleSendMessage =
-        async (text) => {
+    const handleSendMessage = async (text) => {
+        if (!selectedUser) return;
 
-            if (!selectedUser)
-                return;
+        try {
+            const response = await sendMessage({
+                receiverId: selectedUser._id,
+                text,
+            });
 
-            try {
+            setMessages((prev) => [...prev, response.message]);
+            setSentTrigger((prev) => prev + 1); // 👈 increment on every send
 
-                const response =
-                    await sendMessage({
-                        receiverId:
-                            selectedUser._id,
-                        text,
-                    });
-
-                setMessages(
-                    (prev) => [
-                        ...prev,
-                        response.message,
-                    ]
+            if (response.conversation) {
+                setConversation(response.conversation);
+                updateUserPreview(
+                    selectedUser._id,
+                    response.conversation.lastMessage,
+                    response.conversation.lastMessageAt,
+                    0,
+                    0
                 );
-
-                if (
-                    response.conversation
-                ) {
-
-                    setConversation(
-                        response.conversation
-                    );
-
-                    updateUserPreview(
-                        selectedUser._id,
-                        response.conversation.lastMessage,
-                        response.conversation.lastMessageAt,
-                        0,
-                        0
-                    );
-                }
-
-            } catch (error) {
-
-                console.log(error);
-
             }
-        };
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
 
     // ----------------------------------
     // Loading
@@ -742,7 +705,7 @@ export default function ChatPage() {
     // ----------------------------------
 
     return (
-        <div className="h-screen w-screen overflow-hidden bg-white flex">
+        <div className="w-screen overflow-hidden bg-white flex" style={{ height: '100dvh' }}>
 
             {/* SIDEBAR - Hidden on mobile when chat open */}
             <div
@@ -766,15 +729,15 @@ export default function ChatPage() {
             </div>
 
             {/* CHAT AREA - Full screen on mobile */}
-            <div
-                className={`
-                    ${isChatOpen ? "flex" : "hidden"}
-                    md:flex
-                    flex-col
-                    w-full
-                    md:flex-1
-                    h-screen
-                `}
+            <div className={`
+    ${isChatOpen ? "flex" : "hidden"}
+    md:flex
+    flex-col
+    w-full
+    md:flex-1
+    min-h-0
+`}
+                style={{ height: '100dvh' }}
             >
                 {/* Chat Header */}
                 <div className="h-16 flex-shrink-0 border-b border-gray-200">
@@ -785,12 +748,14 @@ export default function ChatPage() {
                 </div>
 
                 {/* Messages Container */}
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden min-h-0">
                     <MessageList
                         conversation={conversation}
                         messages={messages}
                         hasMore={hasMore}
                         loadOlderMessages={loadOlderMessages}
+                        sentTrigger={sentTrigger}
+
                     />
                 </div>
 

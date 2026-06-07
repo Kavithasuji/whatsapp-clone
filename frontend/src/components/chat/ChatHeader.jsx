@@ -11,21 +11,8 @@ export default function ChatHeader({
   onBack,
 }) {
   return (
-    <div
-      className="
-        h-16
-        px-4
-        bg-white
-        flex
-        items-center
-        justify-between
-        border-b
-        border-[#e9edef]
-        sticky
-        top-0
-        z-10
-      "
-    >
+ // In ChatHeader.jsx, change the className to remove sticky/top-0/z-10
+<div className="h-16 px-4 bg-white flex items-center justify-between border-b border-[#e9edef]">
       {/* Left Section */}
       <div className="flex items-center">
 

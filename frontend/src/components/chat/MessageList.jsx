@@ -7,6 +7,7 @@ export default function MessageList({
   messages = [],
   hasMore,
   loadOlderMessages,
+  sentTrigger,
 }) {
   const containerRef = useRef(null);
   const bottomRef = useRef(null);
@@ -33,6 +34,15 @@ export default function MessageList({
       }, 500);
     }
   };
+
+  
+  
+// Force scroll to bottom whenever YOU send a message
+useEffect(() => {
+    if (!sentTrigger) return;
+
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+}, [sentTrigger]);
 
   // Scroll to bottom when switching conversations
   useEffect(() => {
