@@ -18,7 +18,7 @@ import {
     markRead,
     getMessages,
 }
-from "../services/messageService";
+    from "../services/messageService";
 
 export default function ChatPage() {
 
@@ -222,11 +222,11 @@ export default function ChatPage() {
                         setMessages((prev) =>
                             prev.map((msg) =>
                                 String(msg._id) ===
-                                String(message._id)
+                                    String(message._id)
                                     ? {
-                                          ...msg,
-                                          status: "read",
-                                      }
+                                        ...msg,
+                                        status: "read",
+                                    }
                                     : msg
                             )
                         );
@@ -347,11 +347,11 @@ export default function ChatPage() {
                 setUsers((prevUsers) =>
                     prevUsers.map((user) =>
                         String(user._id) ===
-                        String(userId)
+                            String(userId)
                             ? {
-                                  ...user,
-                                  online,
-                              }
+                                ...user,
+                                online,
+                            }
                             : user
                     )
                 );
@@ -360,7 +360,7 @@ export default function ChatPage() {
                     if (
                         prev &&
                         String(prev._id) ===
-                            String(userId)
+                        String(userId)
                     ) {
                         return {
                             ...prev,
@@ -485,10 +485,10 @@ export default function ChatPage() {
                     unreadCount !== null
                         ? unreadCount
                         : Math.max(
-                              0,
-                              (user.unreadCount || 0) +
-                                  unreadDelta
-                          );
+                            0,
+                            (user.unreadCount || 0) +
+                            unreadDelta
+                        );
 
                 const updatedUser = {
                     ...user,
@@ -552,15 +552,15 @@ export default function ChatPage() {
                     response.conversation
                 );
 
-             setPage(1);
+                setPage(1);
 
-setMessages(
-    response.messages || []
-);
+                setMessages(
+                    response.messages || []
+                );
 
-setHasMore(
-    response.hasMore ?? false
-);
+                setHasMore(
+                    response.hasMore ?? false
+                );
 
                 if (
                     response.conversation?._id
@@ -601,55 +601,55 @@ setHasMore(
     // ----------------------------------
 
     const loadOlderMessages =
-  async () => {
+        async () => {
 
-    if (
-      !conversation?._id ||
-      !hasMore ||
-      loadingMore
-    ) {
-      return;
-    }
+            if (
+                !conversation?._id ||
+                !hasMore ||
+                loadingMore
+            ) {
+                return;
+            }
 
-    try {
+            try {
 
-      setLoadingMore(true);
+                setLoadingMore(true);
 
-      const nextPage =
-        page + 1;
+                const nextPage =
+                    page + 1;
 
-      const response =
-        await getMessages(
-          conversation._id,
-                    nextPage,
-                    1
-        );
+                const response =
+                    await getMessages(
+                        conversation._id,
+                        nextPage,
+                        1
+                    );
 
-      setMessages(
-        (prev) => [
-          ...response.messages,
-          ...prev,
-        ]
-      );
+                setMessages(
+                    (prev) => [
+                        ...response.messages,
+                        ...prev,
+                    ]
+                );
 
-      setPage(nextPage);
+                setPage(nextPage);
 
-      setHasMore(
-        response.hasMore
-      );
+                setHasMore(
+                    response.hasMore
+                );
 
-    } catch (error) {
+            } catch (error) {
 
-      console.log(error);
+                console.log(error);
 
-    } finally {
+            } finally {
 
-      setLoadingMore(
-        false
-      );
+                setLoadingMore(
+                    false
+                );
 
-    }
-  };
+            }
+        };
 
     const handleSelectUser =
         (user) => {
@@ -743,7 +743,7 @@ setHasMore(
 
     return (
         <div className="h-screen w-screen overflow-hidden bg-white flex">
-            
+
             {/* SIDEBAR - Hidden on mobile when chat open */}
             <div
                 className={`
