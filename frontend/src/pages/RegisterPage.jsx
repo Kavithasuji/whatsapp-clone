@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import AuthLayout from "../components/auth/AuthLayout";
 import AuthInput from "../components/auth/AuthInput";
 import AuthButton from "../components/auth/AuthButton";
 import { registerUser } from "../services/authService";
 
+
 export default function RegisterPage() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -99,6 +101,9 @@ export default function RegisterPage() {
         password: "",
         confirmPassword: "",
       });
+      setTimeout(() => {
+  navigate("/");
+}, 1000);
 
     } catch (error) {
 

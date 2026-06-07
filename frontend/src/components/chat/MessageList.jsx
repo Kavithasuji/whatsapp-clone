@@ -10,36 +10,72 @@ export default function MessageList({
 }) {
   const containerRef = useRef(null);
   const bottomRef = useRef(null);
-  const shouldAutoScrollRef = useRef(true);
+
   const loadingRef = useRef(false);
+  const previousHeightRef = useRef(0);
+  const loadingOlderRef = useRef(false);
+  const previousMessageCountRef = useRef(0);
 
   const handleScroll = () => {
     const container = containerRef.current;
+
     if (!container || loadingRef.current) return;
 
-    const scrollTop = container.scrollTop;
-
-    // Load more when user scrolls near top (within 100px)
-    if (scrollTop <= 100 && hasMore) {
-      // console.log("[MessageList] TRIGGER LOAD MORE - scrollTop:", scrollTop);
+    if (container.scrollTop <= 100 && hasMore) {
+      previousHeightRef.current = container.scrollHeight;
+      loadingOlderRef.current = true;
       loadingRef.current = true;
+
       loadOlderMessages();
 
-      // Reset after a delay
       setTimeout(() => {
         loadingRef.current = false;
       }, 500);
     }
   };
 
+  // Scroll to bottom when switching conversations
   useEffect(() => {
-    shouldAutoScrollRef.current = true;
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({
+        behavior: "instant",
+      });
+    }, 0);
+
+    previousMessageCountRef.current = messages.length;
   }, [conversation?._id]);
 
   useEffect(() => {
-    if (shouldAutoScrollRef.current && bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "instant" });
+    const container = containerRef.current;
+
+    if (!container) return;
+
+    // Case 1: Older messages loaded
+    if (loadingOlderRef.current) {
+      const newHeight = container.scrollHeight;
+      const heightDifference = newHeight - previousHeightRef.current;
+
+      container.scrollTop += heightDifference;
+
+      loadingOlderRef.current = false;
+      previousHeightRef.current = 0;
     }
+    // Case 2: New message added
+    else if (messages.length > previousMessageCountRef.current) {
+      const distanceFromBottom =
+        container.scrollHeight -
+        container.scrollTop -
+        container.clientHeight;
+
+      // Auto-scroll only if user is already near bottom
+      if (distanceFromBottom < 200) {
+        bottomRef.current?.scrollIntoView({
+          behavior: "smooth",
+        });
+      }
+    }
+
+    previousMessageCountRef.current = messages.length;
   }, [messages]);
 
   if (!conversation) {
