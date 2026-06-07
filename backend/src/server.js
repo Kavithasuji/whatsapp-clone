@@ -31,7 +31,6 @@ from "./sockets/socket.js";
 const app = express();
 
 connectDB();
-
 app.use(
   cors({
     origin: [
