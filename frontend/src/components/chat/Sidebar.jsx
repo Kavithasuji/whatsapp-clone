@@ -112,11 +112,12 @@ export default function Sidebar({
     <>
       <div
         className="
-          w-[380px]
+          w-full
+          h-full
           bg-white
           flex
           flex-col
-          relative
+          overflow-hidden
         "
       >
 

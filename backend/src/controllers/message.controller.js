@@ -111,10 +111,7 @@ export const sendMessage = async (
         }
       }
 
-      console.log(
-        "Message delivered via socket to:",
-        receiverId
-      );
+    
     }
 
     return res.status(201).json({
