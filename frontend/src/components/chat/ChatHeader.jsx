@@ -2,11 +2,13 @@ import {
   Search,
   Video,
   MoreVertical,
+  ArrowLeft,
 } from "lucide-react";
 
 import defaultAvatar from "../../assets/default-avatar.png.jpg";
 export default function ChatHeader({
   selectedUser,
+  onBack,
 }) {
   return (
     <div
@@ -77,13 +79,30 @@ export default function ChatHeader({
         className="
           flex
           items-center
-          gap-5
+          gap-3
           text-gray-600
         "
       >
 
+        {onBack && selectedUser && (
+          <button
+            onClick={onBack}
+            className="
+              md:hidden
+              p-2
+              rounded-full
+              hover:bg-gray-100
+              transition
+            "
+          >
+            <ArrowLeft size={22} />
+          </button>
+        )}
+
         <button
           className="
+            hidden
+            md:flex
             hover:text-gray-900
             transition
           "
@@ -93,6 +112,8 @@ export default function ChatHeader({
 
         <button
           className="
+            hidden
+            md:flex
             hover:text-gray-900
             transition
           "

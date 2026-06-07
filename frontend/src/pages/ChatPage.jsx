@@ -5,19 +5,13 @@ import Sidebar from "../components/chat/Sidebar";
 import ChatHeader from "../components/chat/ChatHeader";
 import MessageList from "../components/chat/MessageList";
 import MessageInput from "../components/chat/MessageInput";
-
 import socket from "../socket";
-
 import { getUsers }
     from "../services/userService";
-
 import {
     getConversation,
 }
     from "../services/conversationService";
-
-
-
 import {
     sendMessage,
     markDelivered,
@@ -47,14 +41,17 @@ export default function ChatPage() {
     const [messages, setMessages] =
         useState([]);
 
-        const [page, setPage] =
-    useState(1);
+    const [page, setPage] =
+        useState(1);
 
-const [hasMore, setHasMore] =
-    useState(true);
+    const [hasMore, setHasMore] =
+        useState(true);
 
-const [loadingMore, setLoadingMore] =
-    useState(false);
+    const [loadingMore, setLoadingMore] =
+        useState(false);
+
+    const [isChatOpen, setIsChatOpen] =
+        useState(false);
 
     const sortUsersByRecentConversation =
         (users) => {
@@ -98,17 +95,17 @@ const [loadingMore, setLoadingMore] =
                     currentUserId
                 );
 
-                console.log(
-                    "User Registered:",
-                    currentUserId
-                );
+                // console.log(
+                //     "User Registered:",
+                //     currentUserId
+                // );
             }
         };
 
-        console.log(
-            "Current User:",
-            currentUser
-        );
+        // console.log(
+        //     "Current User:",
+        //     currentUser
+        // );
 
         socket.on(
             "connect",
@@ -204,11 +201,11 @@ const [loadingMore, setLoadingMore] =
                     );
 
                     try {
-                        console.log(
-                            "[markDelivered] calling for conversation:",
-                            message.conversationId,
-                            new Date().toISOString()
-                        );
+                        // console.log(
+                        //     "[markDelivered] calling for conversation:",
+                        //     message.conversationId,
+                        //     new Date().toISOString()
+                        // );
 
                         await markDelivered(
                             message.conversationId
@@ -569,11 +566,11 @@ setHasMore(
                     response.conversation?._id
                 ) {
 
-                    console.log(
-                        "[markDelivered] loadConversation calling for:",
-                        response.conversation._id,
-                        new Date().toISOString()
-                    );
+                    // console.log(
+                    //     "[markDelivered] loadConversation calling for:",
+                    //     response.conversation._id,
+                    //     new Date().toISOString()
+                    // );
 
                     await markDelivered(
                         response.conversation._id
@@ -662,7 +659,13 @@ setHasMore(
                     ? prev
                     : user
             );
+
+            setIsChatOpen(true);
         };
+
+    const handleBack = () => {
+        setIsChatOpen(false);
+    };
 
     // ----------------------------------
     // Send Message
@@ -739,41 +742,64 @@ setHasMore(
     // ----------------------------------
 
     return (
-        <div className="h-screen flex">
-
-            <Sidebar
-                users={users}
-                selectedUser={
-                    selectedUser
-                }
-                onSelectUser={
-                    handleSelectUser
-                }
-            />
-
-            <div className="flex-1 flex flex-col">
-
-                <ChatHeader
-                    selectedUser={
-                        selectedUser
-                    }
+        <div className="h-screen w-screen overflow-hidden bg-white flex">
+            
+            {/* SIDEBAR - Hidden on mobile when chat open */}
+            <div
+                className={`
+                    ${isChatOpen ? "hidden" : "flex"}
+                    md:flex
+                    flex-col
+                    w-full
+                    md:w-[380px]
+                    h-screen
+                    md:h-screen
+                    flex-shrink-0
+                    border-r border-gray-200
+                `}
+            >
+                <Sidebar
+                    users={users}
+                    selectedUser={selectedUser}
+                    onSelectUser={handleSelectUser}
                 />
+            </div>
 
-               <MessageList
-  conversation={conversation}
-  messages={messages}
-  hasMore={hasMore}
-  loadOlderMessages={
-    loadOlderMessages
-  }
-/>
+            {/* CHAT AREA - Full screen on mobile */}
+            <div
+                className={`
+                    ${isChatOpen ? "flex" : "hidden"}
+                    md:flex
+                    flex-col
+                    w-full
+                    md:flex-1
+                    h-screen
+                `}
+            >
+                {/* Chat Header */}
+                <div className="h-16 flex-shrink-0 border-b border-gray-200">
+                    <ChatHeader
+                        selectedUser={selectedUser}
+                        onBack={handleBack}
+                    />
+                </div>
 
-                <MessageInput
-                    onSendMessage={
-                        handleSendMessage
-                    }
-                />
+                {/* Messages Container */}
+                <div className="flex-1 overflow-hidden">
+                    <MessageList
+                        conversation={conversation}
+                        messages={messages}
+                        hasMore={hasMore}
+                        loadOlderMessages={loadOlderMessages}
+                    />
+                </div>
 
+                {/* Message Input */}
+                <div className="h-auto flex-shrink-0 border-t border-gray-200 bg-white">
+                    <MessageInput
+                        onSendMessage={handleSendMessage}
+                    />
+                </div>
             </div>
 
         </div>
